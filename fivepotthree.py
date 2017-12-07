@@ -41,6 +41,32 @@ def datachange(datamat):
     data=datamat[:][1:n]
     return mat(data)
 
+class NeuralNetwork:
+    def __init__(self,layers):
+        '''
+        :param layers: list [input num,hide num,output num]
+        :param activation: activation funtion
+        '''
+
+        self.layers = layers
+        self.num_layers = len(layers)
+
+
+
+class Neron:
+    def __init__(self,inputnum):
+        self.weight=random.rand((inputnum,1))
+        self.offset=0
+
+    def update(self,dweight,doffset):
+        self.dweight+=dweight
+        self.offset+=doffset
+
+    def calout(self,input):
+        output=sigmoid(dot(self.input,self.weight))
+        return output
+
+
 if __name__=='__main__':
     mydat=loaddata('xiguan30.txt')
     mydata=datachange(mydat)
@@ -60,8 +86,14 @@ if __name__=='__main__':
     l2=sigmoid(dot(l1,syn1))
 
     l2error=mydata[:,-1]-l2
-    dtheta=-1*eta*sigmoid(l2,True)*l2error
-    dgamma=-1*eta*sigmoid(l1,True)*l2_delta.dot(syn1.T)
+    dsyn0=eta*sigmoid(l2,True)*l2error*l1
+    dsyn1=-1*eta*sigmoid(l1,True)*l2_delta.dot(syn1.T)
+    dtheta=-1*eta*sigmoid(l2,True)*l2error*mydata[:,:-1]
+    for i in range(1):
+        syn1[:,j] += dtheta
+    for j in range(n):
+        syn0[:,k] += dgamma
+
 
 
 
