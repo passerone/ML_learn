@@ -1,4 +1,3 @@
-import xlrd
 from numpy import *
 
 def sigmoid(x,deriv=False):
@@ -38,8 +37,9 @@ def datachange(datamat):
             if datamat[i][j] == '否': datamat[i][j] = 0
             if datamat[i][j] == '是': datamat[i][j] = 1
             datamat[i][j]=float(datamat[i][j])
-    data=datamat[:][1:n]
-    return mat(data)
+    data=datamat[:][1:n-1]
+    labels = datamat[:][-1]
+    return data,labels
 
 
 
@@ -53,8 +53,8 @@ class NeuralNetwork:
         self.hidden_nodes = layers[1]
         self.output_nodes = layers[2]
 
-        self.weight_i2h = random.rand((self.input_nodes,self.hidden_nodes))
-        self.weight_h2o = random.rand((self.hidden_nodes,self.output_nodes))
+        self.weight_i2h = random.rand(self.input_nodes,self.hidden_nodes)
+        self.weight_h2o = random.rand(self.hidden_nodes,self.output_nodes)
         self.lr = learning_rate
 
     def train(self,inputset,labels):
@@ -85,4 +85,9 @@ class NeuralNetwork:
         final_outputs = sigmoid(final_inputs)
         return final_outputs
 
-if __name__ == 
+if __name__ == "__main__":
+    mydata=loaddata('xiguan30.txt')
+    input,labels = datachange(mydata)
+    m,n = shape(input)
+    nn = NeuralNetwork((n,n+1,1))
+    nn.train(input,labels)
