@@ -53,19 +53,62 @@ class NeuralNetwork:
 
 
 
-class Neron:
-    def __init__(self,inputnum):
-        self.weight=random.rand((inputnum,1))
+class Neuron:
+    def __init__(self,len_input):
+        self.weight=random.rand((len_input,1))*0.1
         self.offset=0
+
+        self.input = np.ones(len_input)
+        # 对下一层的输出值
+        self.output = 1
+        # 误差项
+        self.deltas_item = 0
+
+    def get_back_weight(self):
+        # 获取反馈差值
+        return self.weights * self.deltas_item
 
     def update(self,dweight,doffset):
         self.dweight+=dweight
         self.offset+=doffset
 
-    def calout(self,input):
-        output=sigmoid(dot(self.input,self.weight))
+    def calcout(self,input):
+        output=sigmoid(dot(input,self.weight))
         return output
 
+class NetLayer:
+    def __init__(self,layer_name,len_node,len_input):
+        '''
+        :param layer_name: 'Hidden' or 'Output'
+        :param len_node:
+        :param len_input:
+        '''
+        self.neurons=[Neuron(len_input) for _ in fange(len_node)] #对于无需关注其实际含义的变量可以用_代替
+        self.next_layer = None   # 记录下一层的引用，方便递归操作
+        self.layer_name = layer_name
+
+    def calcout(self,input):
+        output = array([ node.calcout(input) for node in self.neurons])
+        if self.next_layer is not None:
+            return self.next_layer.calc_output(output)
+        return output
+
+    def get_back_weight(self):
+        return sum([node.get_back_weight() for node in self.neurons])
+
+    def update(self,input,labels,learning_rate):
+        if self.layer_name == 'Output':
+            back_weight = zeros(len(self.neurons))
+        elif self.layer_name == 'Hidden':
+            back_weight = self.next_layer.update(input,labels,learning_rate)
+
+
+
+            dweight = learning_rate*sigmoid(self.calcout(input),True)*(labels-self.calcout(input))*input
+            doffset = -1*learning_rate*sigmoid(self.calcout(input),True)*(labels-self.calcout(input))
+        elif self.layer_name == 'Hidden':
+            dweight = learning_rate*sigmoid(self.calcout(input),True)*(labels-self.calcout(input))*input
+            doffset =
 
 if __name__=='__main__':
     mydat=loaddata('xiguan30.txt')
