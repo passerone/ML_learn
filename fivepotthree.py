@@ -54,11 +54,17 @@ class NeuralNetwork:
         self.hidden_nodes = layers[1]
         self.output_nodes = layers[2]
 
-        self.weight_i2h = random.rand(self.input_nodes,self.hidden_nodes)
-        self.weight_h2o = random.rand(self.hidden_nodes,self.output_nodes)
+        self.weight_i2h = random.rand(self.input_nodes+1,self.hidden_nodes)
+        self.weight_h2o = random.rand(self.hidden_nodes+1,self.output_nodes)
         self.lr = learning_rate
 
+    def dataxiu(self,inputset):
+        bias = ones([len(inputset),1])
+        inputset = hstack((inputset,bias))
+        return inputset
+
     def train(self,inputset,labels,limit=10000):
+        inputset = self.dataxiu(inputset)
         for i in range(limit):
             for j in range(len(inputset)):
                 #forword pass
@@ -67,39 +73,45 @@ class NeuralNetwork:
                 hidden_outputs = sigmoid(hidden_inputs)
 
                 #output layer
-                final_inputs = dot(hidden_outputs,self.weight_h2o)
+                pre_final_inputs = self.dataxiu(hidden_outputs)
+                final_inputs = dot( pre_final_inputs,self.weight_h2o)
                 final_outputs = sigmoid(final_inputs)
-
                 #backward pass
 
                 output_errors = labels[j] - final_outputs
                 hidden_errors = dot(output_errors,self.weight_h2o.T)
+                hidden_errors=hidden_errors[:,0:-1]
 
-                #update weight
+
                 output_delta = multiply(output_errors,sigmoid(final_outputs,True))
                 hidden_delta = multiply(hidden_errors,sigmoid(hidden_outputs,True))
-
-                self.weight_h2o += (output_delta*hidden_outputs).T*self.lr
+                # update weight
+                self.weight_h2o += (output_delta*pre_final_inputs).T*self.lr
                 self.weight_i2h += dot(inputset[j].T,hidden_delta)*self.lr
+
 
         print ('trained over!')
 
     def predict(self,inputlist):
         #forward pass
+        inputlist = self.dataxiu(inputlist)
         # hidden layer
         hidden_inputs = dot(inputlist,self.weight_i2h)
         hidden_outputs = sigmoid(hidden_inputs)
         # output layer
-        final_inputs = dot(hidden_outputs,self.weight_h2o)
+        pre_final_inputs = self.dataxiu(hidden_outputs)
+        final_inputs = dot(pre_final_inputs,self.weight_h2o)
         final_outputs = sigmoid(final_inputs)
         return final_outputs
 
 if __name__ == '__main__':
     mydata=loaddata('xiguan30.txt')
     input,labels = datachange(mydata)
+    #input=mat([[0,1],[1,0],[0,0],[1,1]])
+    #labels = mat([[0],[0],[1],[1]])
     m,n = shape(input)
-    nn = NeuralNetwork((n,n+1,1))
+    nn = NeuralNetwork((n,n+10,1),2)
     nn.train(input,labels)
-    result=nn.predict([[1, 1, 0, 0, 1, 0, 0.437, 0.211], [0, 0, 1, 1, 1, 0, 0.719, 0.103]])
+    result=nn.predict(input)
     print(result)
 
