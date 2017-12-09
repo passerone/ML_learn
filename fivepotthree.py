@@ -2,7 +2,7 @@ from numpy import *
 
 def sigmoid(x,deriv=False):
     if (deriv==True):
-        return x*(1-x)
+        return multiply(x,1-x)
     return 1/(1+exp(-x))
 
 def loaddata(filename):
@@ -37,8 +37,9 @@ def datachange(datamat):
             if datamat[i][j] == '否': datamat[i][j] = 0
             if datamat[i][j] == '是': datamat[i][j] = 1
             datamat[i][j]=float(datamat[i][j])
-    data=datamat[:][1:n-1]
-    labels = datamat[:][-1]
+    datamat=mat(datamat)
+    data=datamat[:,1:n-1]
+    labels = datamat[:,-1]
     return data,labels
 
 
@@ -57,37 +58,48 @@ class NeuralNetwork:
         self.weight_h2o = random.rand(self.hidden_nodes,self.output_nodes)
         self.lr = learning_rate
 
-    def train(self,inputset,labels):
-        #forword pass
-        #hidden layer
-        hidden_inputs = dot(self.weight_i2h,inputset)
-        hidden_outputs = sigmoid(hidden_inputs)
-        #output layer
-        final_inputs = dot(self.weight_h2o,hidden_outputs)
-        final_outputs = sigmoid(final_inputs)
+    def train(self,inputset,labels,limit=10000):
+        for i in range(limit):
+            for j in range(len(inputset)):
+                #forword pass
+                #hidden layer
+                hidden_inputs = dot(inputset[j],self.weight_i2h)
+                hidden_outputs = sigmoid(hidden_inputs)
 
-        #backward pass
+                #output layer
+                final_inputs = dot(hidden_outputs,self.weight_h2o)
+                final_outputs = sigmoid(final_inputs)
 
-        output_errors = labels - final_outputs
-        hidden_errors = dot(output_errors,self.weight_h2o)
+                #backward pass
 
-        #update weight
-        self.weight_h2o += output_errors*hidden_outputs.T*self.lr
-        self.weight_i2h += (inputset*hidden_errors*self.lr).T
+                output_errors = labels[j] - final_outputs
+                hidden_errors = dot(output_errors,self.weight_h2o.T)
+
+                #update weight
+                output_delta = multiply(output_errors,sigmoid(final_outputs,True))
+                hidden_delta = multiply(hidden_errors,sigmoid(hidden_outputs,True))
+
+                self.weight_h2o += (output_delta*hidden_outputs).T*self.lr
+                self.weight_i2h += dot(inputset[j].T,hidden_delta)*self.lr
+
+        print ('trained over!')
 
     def predict(self,inputlist):
         #forward pass
         # hidden layer
-        hidden_inputs = dot(self.weight_i2h, inputset)
+        hidden_inputs = dot(inputlist,self.weight_i2h)
         hidden_outputs = sigmoid(hidden_inputs)
         # output layer
-        final_inputs = dot(self.weight_h2o, hidden_outputs)
+        final_inputs = dot(hidden_outputs,self.weight_h2o)
         final_outputs = sigmoid(final_inputs)
         return final_outputs
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     mydata=loaddata('xiguan30.txt')
     input,labels = datachange(mydata)
     m,n = shape(input)
     nn = NeuralNetwork((n,n+1,1))
     nn.train(input,labels)
+    result=nn.predict([[1, 1, 0, 0, 1, 0, 0.437, 0.211], [0, 0, 1, 1, 1, 0, 0.719, 0.103]])
+    print(result)
+
